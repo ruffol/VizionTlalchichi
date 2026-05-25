@@ -253,23 +253,59 @@ class CameraScreenViewModel @Inject constructor(
 
             val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, targetResolution.width, targetResolution.height)
             format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
-            format.setInteger(MediaFormat.KEY_BIT_RATE, 5000000) // Subimos a 5Mbps para alta calidad
+            format.setInteger(MediaFormat.KEY_BIT_RATE, 5000000) 
             format.setInteger(MediaFormat.KEY_FRAME_RATE, 30)
             format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
             format.setInteger(MediaFormat.KEY_BITRATE_MODE, MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR)
             
-            // Perfil High para máxima nitidez (si el hardware lo soporta)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                format.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileHigh)
-                format.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel4)
-            }
-            
-            // Force encoder to prepend SPS/PPS to every IDR frame (API 29+)
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 format.setInteger(MediaFormat.KEY_PREPEND_HEADER_TO_SYNC_FRAMES, 1)
             }
 
             mediaCodec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+            
+            // ASYNC ENCODER CALLBACK
+            mediaCodec?.setCallback(object : MediaCodec.Callback() {
+                override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
+                    // Surface input handles this automatically
+                }
+
+                override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
+                    val buffer = codec.getOutputBuffer(index) ?: return
+                    val data = ByteArray(info.size)
+                    buffer.position(info.offset)
+                    buffer.limit(info.offset + info.size)
+                    buffer.get(data)
+                    
+                    // Broadcast H.264 data
+                    websocketServerService?.broadcast(data)
+                    codec.releaseOutputBuffer(index, false)
+                }
+
+                override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
+                    Log.e(tag, "Encoder Error: ${e.message}")
+                }
+
+                override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
+                    Log.d(tag, "Encoder Format Changed: $format")
+                    // Send SPS/PPS with explicit start codes 00 00 00 01
+                    val sps = format.getByteBuffer("csd-0")
+                    val pps = format.getByteBuffer("csd-1")
+                    if (sps != null && pps != null) {
+                        val header = byteArrayOf(0, 0, 0, 1)
+                        val config = ByteArray(header.size + sps.remaining() + header.size + pps.remaining())
+                        var pos = 0
+                        
+                        System.arraycopy(header, 0, config, pos, header.size); pos += header.size
+                        sps.get(config, pos, sps.remaining()); pos += sps.remaining()
+                        System.arraycopy(header, 0, config, pos, header.size); pos += header.size
+                        pps.get(config, pos, pps.remaining())
+                        
+                        websocketServerService?.broadcast(config)
+                    }
+                }
+            })
+
             mediaCodec?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
             encoderSurface = mediaCodec?.createInputSurface()
             
@@ -280,7 +316,7 @@ class CameraScreenViewModel @Inject constructor(
                         val surface = encoderSurface
                         if (surface != null && surface.isValid) {
                             request.provideSurface(surface, Dispatchers.IO.asExecutor()) {
-                                Log.d(tag, "Surface result: ${it.resultCode}")
+                                // Surface result
                             }
                         } else {
                             request.willNotProvideSurface()
@@ -293,56 +329,11 @@ class CameraScreenViewModel @Inject constructor(
     }
 
     private fun startEncoder() {
-        val codec = mediaCodec ?: return
         try {
-            codec.start()
+            mediaCodec?.start()
+            Log.d(tag, "Encoder started (Async mode)")
         } catch (e: Exception) {
             Log.e(tag, "Failed to start codec", e)
-            return
-        }
-
-        viewModelScope.launch(Dispatchers.IO) {
-            val bufferInfo = MediaCodec.BufferInfo()
-            while (mediaCodec == codec) {
-                try {
-                    val outputBufferId = codec.dequeueOutputBuffer(bufferInfo, 10000)
-                    if (outputBufferId >= 0) {
-                        val outputBuffer = codec.getOutputBuffer(outputBufferId)
-                        if (outputBuffer != null) {
-                            // Position the buffer at the offset and limit it to the size
-                            outputBuffer.position(bufferInfo.offset)
-                            outputBuffer.limit(bufferInfo.offset + bufferInfo.size)
-                            
-                            val outData = ByteArray(bufferInfo.size)
-                            outputBuffer.get(outData)
-                            
-                            // Send H.264 NAL units over WebSocket
-                            websocketServerService?.broadcast(outData)
-                            
-                            codec.releaseOutputBuffer(outputBufferId, false)
-                        }
-                    } else if (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                        val newFormat = codec.outputFormat
-                        Log.d(tag, "Encoder output format changed: $newFormat")
-                        
-                        // Manually extract and send SPS/PPS if they are available in the format
-                        val sps = newFormat.getByteBuffer("csd-0")
-                        val pps = newFormat.getByteBuffer("csd-1")
-                        if (sps != null && pps != null) {
-                            val configData = ByteArray(sps.remaining() + pps.remaining())
-                            sps.get(configData, 0, sps.remaining())
-                            pps.get(configData, sps.position(), pps.remaining())
-                            Log.d(tag, "Sending manual SPS/PPS config (${configData.size} bytes)")
-                            websocketServerService?.broadcast(configData)
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(tag, "Error during encoding loop", e)
-                    // Don't break immediately on transient errors, but check if codec is still valid
-                    if (mediaCodec != codec) break
-                }
-            }
-            Log.d(tag, "Encoder loop stopped")
         }
     }
 

@@ -67,8 +67,8 @@ fun AboutScreen(
 ) {
 
     AboutScreenContent(
-        appName = "VisionAlejandrino",
-        developerName = "ALEJANDRINOTECNOLOGIA",
+        appName = "VizionTlalchichi",
+        developerName = "Tlalchichi777",
         developerEmail = "umerfarooq2383@gmail.com",
         license = "GPL v3",
         githubRepoUrl = "https://github.com/UmerCodez/WebsocketCAM",
@@ -297,8 +297,8 @@ private fun Preview() {
     WebsocketCAMTheme {
 
         AboutScreenContent(
-            appName = "VisionAlejandrino",
-            developerName = "ALEJANDRINOTECNOLOGIA",
+            appName = "VizionTlalchichi",
+            developerName = "Tlalchichi777",
             developerEmail = "umerfarooq2383@gmail.com",
             license = "GPL v3",
             githubRepoUrl = "https://github.com/UmerCodez/WebsocketCAM",

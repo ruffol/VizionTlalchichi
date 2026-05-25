@@ -1,20 +1,21 @@
 <div align="center">
 
-# VisionAlejandrino
+# VizionTlalchichi
 
-<img src="https://github.com/AlejandrinoDGR/VisionAlejandrino/blob/main/assets/app-icon.png" width="150">
+<img src="https://github.com/ruffol/VizionTlalchichi/blob/main/assets/app-icon.png" width="150">
 
-![GitHub License](https://img.shields.io/github/license/AlejandrinoDGR/VisionAlejandrino?style=for-the-badge) ![Android Badge](https://img.shields.io/badge/Android-7.0+-34A853?logo=android&logoColor=fff&style=for-the-badge) ![Jetpack Compose Badge](https://img.shields.io/badge/Jetpack%20Compose-4285F4?logo=jetpackcompose&logoColor=fff&style=for-the-badge) ![Material 3](https://img.shields.io/badge/Material%203-ebe89d?style=for-the-badge&logo=materialdesign&logoColor=white) ![Version](https://img.shields.io/badge/Version-4.20-blue?style=for-the-badge)
+![GitHub License](https://img.shields.io/github/license/ruffol/VizionTlalchichi?style=for-the-badge) ![Android Badge](https://img.shields.io/badge/Android-7.0+-34A853?logo=android&logoColor=fff&style=for-the-badge) ![Jetpack Compose Badge](https://img.shields.io/badge/Jetpack%20Compose-4285F4?logo=jetpackcompose&logoColor=fff&style=for-the-badge) ![Material 3](https://img.shields.io/badge/Material%203-ebe89d?style=for-the-badge&logo=materialdesign&logoColor=white) ![Version](https://img.shields.io/badge/Version-4.20-blue?style=for-the-badge)
 
-**Autor:** ALEJANDRINOTECNOLOGIA
+**Autor:** Tlalchichi777
 
 ### Accede a la cámara de Android usando una API cliente WebSocket para realizar tareas de IA y visión artificial en tiempo real sobre una transmisión de video en vivo.
 
-<img src="https://github.com/AlejandrinoDGR/VisionAlejandrino/blob/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="250" heigth="250"> <img src="https://github.com/AlejandrinoDGR/VisionAlejandrino/blob/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="250" heigth="250"> 
+<img src="https://github.com/ruffol/VizionTlalchichi/blob/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="250" heigth="250"> <img src="https://github.com/ruffol/VizionTlalchichi/blob/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="250" heigth="250"> 
 
 </div>
 
-**VisionAlejandrino** (v4.20) transmite video en tiempo real utilizando el codec **H.264 (AVC)** acelerado por hardware. A diferencia de las versiones anteriores que enviaban JPEGs individuales, esta versión utiliza `MediaCodec` para generar un stream de video de alta fidelidad y baja latencia, optimizando drásticamente el uso de batería y CPU del dispositivo móvil.
+**VizionTlalchichi** (v4.20) transmite video en tiempo real utilizando el codec **H.264 (AVC)** acelerado por hardware.
+A diferencia de las versiones anteriores que enviaban JPEGs individuales, esta versión utiliza `MediaCodec` para generar un stream de video de alta fidelidad y baja latencia, optimizando drásticamente el uso de batería y CPU del dispositivo móvil.
 
 ---
 
